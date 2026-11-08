@@ -108,11 +108,14 @@ class Estimate:
         if self.wh_period_15m:
             total = 0.0
             interval = dt.timedelta(minutes=15)
+            cutoff = now - interval
             for timestamp, energy in self.wh_period_15m.items():
+                # Skip finished and future-day intervals before prorating.
+                if timestamp <= cutoff or timestamp >= midnight:
+                    continue
                 start = max(timestamp, now)
                 end = min(timestamp + interval, midnight)
-                if end > start:
-                    total += energy * ((end - start) / interval)
+                total += energy * ((end - start) / interval)
             return total
 
         # Older callers and stored forecasts may only contain power samples.
